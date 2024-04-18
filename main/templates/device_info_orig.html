@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Information</title>
+</head>
+<body>
+    <h1>Device Information</h1>
+    <ul>
+        <li>IP Address: {{ device.ip_address }}</li>
+        <li>MAC Address: {{ device.mac_address }}</li>
+        <li>Device Type: {{ device.device_type }}</li>
+        <li>Trusted: {{ device.trusted }}</li>
+    </ul>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="scan_ports">Сканировать порты</button>
+    </form>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="check_activity">Проверить активность</button>
+    </form>
+    <form method="post" action="{% url 'trust_device' device.id %}">
+        {% csrf_token %}
+        <button type="submit">Trust</button>
+    </form>
+    <form method="post" action="{% url 'untrust_device' device.id %}">
+        {% csrf_token %}
+        <button type="submit">UnTrust</button>
+    </form>
+
+    <!-- Отображение истории проверок активности устройства -->
+    <h2>История проверок активности устройства</h2>
+    <ul>
+        {% for activity in device_activities %}
+            <li>
+                Время начала: {{ activity.start_time }},
+                Время окончания: {{ activity.end_time }},
+                Активно: {{ activity.is_active }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% if last_scan %}
+    <h3>Last Scan Ports ({{ last_scan.created_at }}):</h3>
+    {% if ports %}
+        <ul>
+            {% for port in ports %}
+                {% if port.port == 0 %}
+                    <p>Нет открытых портов</p>
+                {% else %}
+                    <li>{{ port.port }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет открытых портов</p>
+    {% endif %}
+{% endif %}
+
+
+
+{% if trust_level is not None %}
+    {% if trust_level < 70 %}
+        <h2>Уровень доверия: Низкий ({{ trust_level }}%)</h2>
+    {% elif trust_level < 80 %}
+        <h2>Уровень доверия: Средний ({{ trust_level }}%)</h2>
+    {% elif trust_level < 90 %}
+        <h2>Уровень доверия: Хороший ({{ trust_level }}%)</h2>
+    {% else %}
+        <h2>Уровень доверия: Отличный ({{ trust_level }}%)</h2>
+    {% endif %}
+{% endif %}
+</body>
+</html>
